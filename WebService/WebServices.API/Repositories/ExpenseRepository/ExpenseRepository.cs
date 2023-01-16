@@ -12,6 +12,10 @@ namespace WebServices.API.Repositories.ExpenseRepository
             this.dbContext = dbContext;
         }
 
+        public async Task<IEnumerable<Expense>> GetAllExpenses()
+        {
+            return await dbContext.Expenses.ToListAsync();
+        }
 
         public async Task<IEnumerable<Expense>> GetUserExpenseBeetweenDates(DateOnly startDate, DateOnly endDate)
         {

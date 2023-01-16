@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using WebServices.API.Database;
+using WebServices.API.Repositories.CategoryRepository;
+using WebServices.API.Repositories.ExpenseRepository;
+using WebServices.API.Repositories.UserRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +18,11 @@ builder.Services.AddDbContext<MyDBContext>(options =>
 {
     options.UseSqlServer(dbConnectionString);
 });
+
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 
 
