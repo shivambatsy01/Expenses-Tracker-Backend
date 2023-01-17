@@ -18,5 +18,10 @@ namespace WebServices.API.Repositories.UserRepository
             var user = await dBContext.Users.FirstOrDefaultAsync(x => x.UserName.ToLower() == username.ToLower() && x.Password == password);
             return user;
         }
+
+        public async Task<IEnumerable<User>> GetAllUsers()
+        {
+            return await dBContext.Users.ToListAsync();
+        }
     }
 }
