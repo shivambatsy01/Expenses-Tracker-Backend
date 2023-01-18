@@ -39,13 +39,38 @@ namespace WebServices.API.Controllers
 
 
         [HttpGet]
+        [Route("{id:guid}")]
+        [ActionName("GetExpenseById")]
+        public async Task<IActionResult> GetExpenseById(Guid id) //actually not need from requirement perspective
+        {
+            try
+            {
+                var expense = await expenseRepository.GetExpenseByIdAsync(id);
+                if (expense == null)
+                {
+                    return NotFound();
+                }
+                return Ok(expense);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "sorry server down");
+            }
+        }
+
+
+
+
+//---------------------------------users-expenses-----------------------------
+
+        [HttpGet]
         [Route("{users-expenses}/{userId:Guid}")]
         public async Task<IActionResult> GetAllUserExpenses(Guid userId)
         {
             //or we can use paging here : mention this into jwt string
             try
             {
-                var expenses = await expenseRepository.GetAllUserExpensesAsync(userId);
+                var expenses = await expenseRepository.GetUserAllExpensesAsync(userId);
                 return Ok(expenses);
             }
             catch
@@ -54,81 +79,49 @@ namespace WebServices.API.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("{id:guid}")]
-        [ActionName("GetExpenseById")]
-        public async Task<IActionResult> GetExpenseById(Guid id)
-        {
-            try
-            {
-                var expense = await expenseRepository.GetUserExpenseByIdAsync(id);
-                if(expense == null)
-                {
-                    return NotFound();
-                }
-                return Ok(expense);
-            }
-            catch
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "sorry server down");
-            }
-        }
-
-
 
         [HttpGet]
-        [Route("{userId:guid}/{startDate:DateTime}/{endDate:DateTime}")]
-        public async Task<IActionResult> GetUserExpenseBeetweenDates(Guid userId, DateTime startDate, DateTime endDate)
-        {
-            try
-            {
-                var expense = await expenseRepository.GetUserExpenseBeetweenDatesAsync(userId, startDate, endDate);
-                if (expense == null)
-                {
-                    return NotFound();
-                }
-                return Ok(expense);
-            }
-            catch
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "sorry server down");
-            }
-        }
-
-
-        [HttpGet]
-        [Route("{userId:guid}/{date:DateTime}")]
+        [Route("{users-expenses}/{userId:guid}/{date:DateTime}")]
         public async Task<IActionResult> GetUserExpenseByDate(Guid userId, DateTime date)
         {
             try
             {
-                var expense = await expenseRepository.GetUserExpenseByDateAsync(userId, date);
-                if (expense == null)
-                {
-                    return NotFound();
-                }
-                return Ok(expense);
+                var expenses = await expenseRepository.GetUserExpensesByDateAsync(userId, date);
+                return Ok(expenses);
             }
             catch
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "sorry server down");
             }
         }
+
+
+        [HttpGet]
+        [Route("{users-expenses}/{userId:guid}/{startDate:DateTime}/{endDate:DateTime}")]
+        public async Task<IActionResult> GetUserExpenseBeetweenDates(Guid userId, DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                var expenses = await expenseRepository.GetUserExpensesBeetweenDatesAsync(userId, startDate, endDate);
+                return Ok(expenses);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "sorry server down");
+            }
+        }
+
 
 
 
         [HttpGet]
-        [Route("{userId:guid}/{categoryId:int}")]
+        [Route("{users-expenses}/{userId:guid}/{categoryId:int}")]
         public async Task<IActionResult> GetUserExpenseByCategory(Guid userId, int categoryId)
         {
             try
             {
-                var expense = await expenseRepository.GetUserExpenseByCategoryAsync(userId, categoryId);
-                if (expense == null)
-                {
-                    return NotFound();
-                }
-                return Ok(expense);
+                var expenses = await expenseRepository.GetUserExpensesByCategoryAsync(userId, categoryId);
+                return Ok(expenses);
             }
             catch
             {
@@ -137,8 +130,11 @@ namespace WebServices.API.Controllers
         }
 
 
+
+//-------------------------add/update expense---------------------
+
         [HttpPost]
-        [Route("{add-expenses}/{userId:Guid}")]
+        [Route("{add-expense}/{userId:Guid}")]
         public async Task<IActionResult> AddExpense(Guid userId, ExpenseRequest request)
         {
             try
@@ -151,7 +147,7 @@ namespace WebServices.API.Controllers
                 }
 
                 var response = mapper.Map<ExpenseResponse>(addedExpense);
-                return CreatedAtAction(nameof(GetExpenseById), new { id = response.Id, response });
+                return CreatedAtAction(nameof(GetExpenseById), new { id = response.Id}, response);
             }
             catch
             {
@@ -161,8 +157,8 @@ namespace WebServices.API.Controllers
 
 
 
-        [HttpPost]
-        [Route("{id:guid}")]
+        [HttpPut]
+        [Route("{expenseId:guid}")]
         public async Task<IActionResult> UpdateExpense(Guid expenseId, ExpenseRequest request)
         {
             try
@@ -175,7 +171,7 @@ namespace WebServices.API.Controllers
                 }
 
                 var response = mapper.Map<ExpenseResponse>(updatedExpense);
-                return CreatedAtAction(nameof(GetExpenseById), new { id = response.Id, response });
+                return CreatedAtAction(nameof(GetExpenseById), new { id = response.Id }, response);
             }
             catch
             {
@@ -184,6 +180,25 @@ namespace WebServices.API.Controllers
         }
 
 
+        [HttpDelete]
+        [Route("{expenseId:guid}")]
+        public async Task<IActionResult> DeleteExpense(Guid expenseId)
+        {
+            try
+            {
+                var deletedExpense = await expenseRepository.DeleteExpenseAsync(expenseId);
+                if (deletedExpense == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(deletedExpense);
+            }
+            catch
+            {
+                return StatusCode(500, "Server down");
+            }
+        }
 
 
 
