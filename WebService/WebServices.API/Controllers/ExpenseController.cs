@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using WebServices.API.Models.Domain;
+using WebServices.API.Models.RequestDTO;
+using WebServices.API.Models.ResponseDTO;
 using WebServices.API.Repositories.ExpenseRepository;
 
 namespace WebServices.API.Controllers
@@ -8,9 +13,11 @@ namespace WebServices.API.Controllers
     public class ExpenseController : Controller
     {
         private readonly IExpenseRepository expenseRepository;
-        public ExpenseController(IExpenseRepository expenseRepository)
+        private readonly IMapper mapper;
+        public ExpenseController(IExpenseRepository expenseRepository, IMapper mapper)
         {
             this.expenseRepository = expenseRepository;
+            this.mapper = mapper;
         }
 
 
@@ -21,7 +28,7 @@ namespace WebServices.API.Controllers
             //or we can use paging here : mention this into jwt string
             try
             {
-                var expenses = await expenseRepository.GetAllExpenses();
+                var expenses = await expenseRepository.GetAllExpensesAsync();
                 return Ok(expenses);
             }
             catch
@@ -38,7 +45,7 @@ namespace WebServices.API.Controllers
             //or we can use paging here : mention this into jwt string
             try
             {
-                var expenses = await expenseRepository.GetAllUserExpenses(userId);
+                var expenses = await expenseRepository.GetAllUserExpensesAsync(userId);
                 return Ok(expenses);
             }
             catch
@@ -49,11 +56,12 @@ namespace WebServices.API.Controllers
 
         [HttpGet]
         [Route("{id:guid}")]
+        [ActionName("GetExpenseById")]
         public async Task<IActionResult> GetExpenseById(Guid id)
         {
             try
             {
-                var expense = await expenseRepository.GetUserExpenseById(id);
+                var expense = await expenseRepository.GetUserExpenseByIdAsync(id);
                 if(expense == null)
                 {
                     return NotFound();
@@ -74,7 +82,7 @@ namespace WebServices.API.Controllers
         {
             try
             {
-                var expense = await expenseRepository.GetUserExpenseBeetweenDates(userId, startDate, endDate);
+                var expense = await expenseRepository.GetUserExpenseBeetweenDatesAsync(userId, startDate, endDate);
                 if (expense == null)
                 {
                     return NotFound();
@@ -94,7 +102,7 @@ namespace WebServices.API.Controllers
         {
             try
             {
-                var expense = await expenseRepository.GetUserExpenseByDate(userId, date);
+                var expense = await expenseRepository.GetUserExpenseByDateAsync(userId, date);
                 if (expense == null)
                 {
                     return NotFound();
@@ -115,7 +123,7 @@ namespace WebServices.API.Controllers
         {
             try
             {
-                var expense = await expenseRepository.GetUserExpenseByCategory(userId, categoryId);
+                var expense = await expenseRepository.GetUserExpenseByCategoryAsync(userId, categoryId);
                 if (expense == null)
                 {
                     return NotFound();
@@ -128,6 +136,61 @@ namespace WebServices.API.Controllers
             }
         }
 
+
+        [HttpPost]
+        [Route("{add-expenses}/{userId:Guid}")]
+        public async Task<IActionResult> AddExpense(Guid userId, ExpenseRequest request)
+        {
+            try
+            {
+                var expense = mapper.Map<Expense>(request);
+                var addedExpense = await expenseRepository.AddExpenseAsync(userId, expense);
+                if(addedExpense == null)
+                {
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable, "Please try again.");
+                }
+
+                var response = mapper.Map<ExpenseResponse>(addedExpense);
+                return CreatedAtAction(nameof(GetExpenseById), new { id = response.Id, response });
+            }
+            catch
+            {
+                return StatusCode(500, "Server down");
+            }
+        }
+
+
+
+        [HttpPost]
+        [Route("{id:guid}")]
+        public async Task<IActionResult> UpdateExpense(Guid expenseId, ExpenseRequest request)
+        {
+            try
+            {
+                var expense = mapper.Map<Expense>(request);
+                var updatedExpense = await expenseRepository.UpdateExpenseAsync(expenseId, expense);
+                if (updatedExpense == null)
+                {
+                    return NotFound();
+                }
+
+                var response = mapper.Map<ExpenseResponse>(updatedExpense);
+                return CreatedAtAction(nameof(GetExpenseById), new { id = response.Id, response });
+            }
+            catch
+            {
+                return StatusCode(500, "Server down");
+            }
+        }
+
+
+
+
+
+        private bool AddRequestValidation(ExpenseRequest request)
+        {
+            return true;
+        }
 
     }
 }
