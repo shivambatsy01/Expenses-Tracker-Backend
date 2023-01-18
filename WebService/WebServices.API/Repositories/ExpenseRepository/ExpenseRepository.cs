@@ -12,40 +12,66 @@ namespace WebServices.API.Repositories.ExpenseRepository
             this.dbContext = dbContext;
         }
 
+        public async Task<Expense> AddExpenseAsync(Guid userId, Expense expense)
+        {
+            expense.Id= Guid.NewGuid();
+            expense.UserId= userId;
+            await dbContext.Expenses.AddAsync(expense);
+            await dbContext.SaveChangesAsync();
+            return expense;
+        }
 
-        public async Task<IEnumerable<Expense>> GetAllExpenses()
+        public async Task<IEnumerable<Expense>> GetAllExpensesAsync()
         {
             return await dbContext.Expenses.ToListAsync();
         }
 
 
-        public async Task<IEnumerable<Expense>> GetAllUserExpenses(Guid userId)
+        public async Task<IEnumerable<Expense>> GetAllUserExpensesAsync(Guid userId)
         {
             return await dbContext.Expenses.Where(x => x.UserId == userId).ToListAsync();
         }
 
-        public async Task<IEnumerable<Expense>> GetUserExpenseBeetweenDates(Guid userId, DateTime startDate, DateTime endDate)
+        public async Task<IEnumerable<Expense>> GetUserExpenseBeetweenDatesAsync(Guid userId, DateTime startDate, DateTime endDate)
         {
             return await dbContext.Expenses.Where(x =>
              x.DateOfExpense.CompareTo(startDate) >= 0 && x.DateOfExpense.CompareTo(endDate) <= 0 && x.UserId == userId)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Expense>> GetUserExpenseByCategory(Guid userId, int categoryId)
+        public async Task<IEnumerable<Expense>> GetUserExpenseByCategoryAsync(Guid userId, int categoryId)
         {
             return await dbContext.Expenses.Where(x => x.CategoryId == categoryId && x.UserId == userId).ToListAsync();
         }
 
-        public async Task<IEnumerable<Expense>> GetUserExpenseByDate(Guid userId, DateTime date)
+        public async Task<IEnumerable<Expense>> GetUserExpenseByDateAsync(Guid userId, DateTime date)
         {
             //need to change this as we are storing time also with date, need to apply some comparisons date+timespan(1 day) something like
             return await dbContext.Expenses.Where(x => x.DateOfExpense.CompareTo(date) == 0 && x.UserId == userId)
                 .ToListAsync();
         }
 
-        public async Task<Expense> GetUserExpenseById(Guid expenseId)
+        public async Task<Expense> GetUserExpenseByIdAsync(Guid expenseId) //need to provide userid also in nosql db
         {
             return await dbContext.Expenses.FirstOrDefaultAsync(x => x.Id == expenseId);
+        }
+
+        public async Task<Expense> UpdateExpenseAsync(Guid expenseId, Expense expense)
+        {
+            var existingExpense = await  dbContext.Expenses.FirstOrDefaultAsync(x => x.Id == expenseId);
+            if(existingExpense == null)
+            {
+                return null;
+            }
+
+            existingExpense.DateOfExpense = expense.DateOfExpense;
+            existingExpense.Name = expense.Name;
+            existingExpense.Amount = expense.Amount;
+            existingExpense.Remarks= expense.Remarks;
+            existingExpense.CategoryId = expense.CategoryId;
+
+            await dbContext.SaveChangesAsync();
+            return existingExpense;
         }
     }
 }
