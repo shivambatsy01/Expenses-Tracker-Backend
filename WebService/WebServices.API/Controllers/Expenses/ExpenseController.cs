@@ -6,7 +6,7 @@ using WebServices.API.Models.RequestDTO;
 using WebServices.API.Models.ResponseDTO;
 using WebServices.API.Repositories.ExpenseRepository;
 
-namespace WebServices.API.Controllers
+namespace WebServices.API.Controllers.Expenses
 {
     [ApiController]
     [Route("/expenses")]
@@ -61,7 +61,7 @@ namespace WebServices.API.Controllers
 
 
 
-//---------------------------------users-expenses-----------------------------
+        //---------------------------------users-expenses-----------------------------
 
         [HttpGet]
         [Route("{users-expenses}/{userId:Guid}")]
@@ -131,7 +131,7 @@ namespace WebServices.API.Controllers
 
 
 
-//-------------------------add/update expense---------------------
+        //-------------------------add/update expense---------------------
 
         [HttpPost]
         [Route("{add-expense}/{userId:Guid}")]
@@ -139,15 +139,19 @@ namespace WebServices.API.Controllers
         {
             try
             {
+                if (!AddExpenseRequestValidation(request))
+                {
+                    return BadRequest(ModelState);
+                }
                 var expense = mapper.Map<Expense>(request);
                 var addedExpense = await expenseRepository.AddExpenseAsync(userId, expense);
-                if(addedExpense == null)
+                if (addedExpense == null)
                 {
                     return StatusCode(StatusCodes.Status503ServiceUnavailable, "Please try again.");
                 }
 
                 var response = mapper.Map<ExpenseResponse>(addedExpense);
-                return CreatedAtAction(nameof(GetExpenseById), new { id = response.Id}, response);
+                return CreatedAtAction(nameof(GetExpenseById), new { id = response.Id }, response);
             }
             catch
             {
@@ -163,6 +167,11 @@ namespace WebServices.API.Controllers
         {
             try
             {
+                if(!UpdateExpenseRequestValidation(request))
+                {
+                    return BadRequest(ModelState);
+                }
+
                 var expense = mapper.Map<Expense>(request);
                 var updatedExpense = await expenseRepository.UpdateExpenseAsync(expenseId, expense);
                 if (updatedExpense == null)
@@ -182,7 +191,7 @@ namespace WebServices.API.Controllers
 
         [HttpDelete]
         [Route("{expenseId:guid}")]
-        public async Task<IActionResult> DeleteExpense(Guid expenseId)
+        public async Task<IActionResult> DeleteExpense(Guid expenseId) //only user can delete it's expenses, no ther user -> authorisation
         {
             try
             {
@@ -202,9 +211,55 @@ namespace WebServices.API.Controllers
 
 
 
-        private bool AddRequestValidation(ExpenseRequest request)
+
+
+
+
+
+
+   //--------------------------validations--------------------------------
+
+        private bool AddExpenseRequestValidation(ExpenseRequest request)
         {
+            if (request == null)
+            {
+                ModelState.AddModelError(nameof(request), "Add request can not be empty");
+            }
+
+            if (request.Name == null)
+            {
+                ModelState.AddModelError(nameof(request.Name), "Expense Name can not be empty");
+            }
+
+            if (request.DateOfExpense == null)
+            {
+                ModelState.AddModelError(nameof(request.DateOfExpense), "Expense Date can not be empty");
+            }
+
+            if (request.Amount == null)
+            {
+                ModelState.AddModelError(nameof(request.Amount), "Expense Amount can not be empty");
+            }
+
+            if (request.CategoryId == null)
+            {
+                ModelState.AddModelError(nameof(request.CategoryId), "Expense Category can not be empty");
+            }
+
+            if (request.UserId == null)
+            {
+                ModelState.AddModelError(nameof(request.UserId), "UserId also required in request body");
+            }
+
+
+
+            if (ModelState.ErrorCount > 0) return false;
             return true;
+        }
+
+        private bool UpdateExpenseRequestValidation(ExpenseRequest request)
+        {
+            return AddExpenseRequestValidation(request);
         }
 
     }
