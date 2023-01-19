@@ -6,5 +6,6 @@ namespace WebServices.API.Repositories.UserRepository
     {
         public Task<User> AuthenticateUser(string username, string password);
         public Task<IEnumerable<User>> GetAllUsers();
+        public Task<User> RegisterUser(User user);
     }
 }
