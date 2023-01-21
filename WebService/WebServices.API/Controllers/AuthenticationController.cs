@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
+//using System.Web.Mvc;
 using WebServices.API.Database;
 using WebServices.API.Models.Domain;
 using WebServices.API.Models.RequestDTO;
@@ -49,7 +51,31 @@ namespace WebServices.API.Controllers
         }
 
 
+        [HttpPost]
+        [Route("{/login}")]
+        public async Task<IActionResult> Login([FromBody]string username, [FromBody]string password)
+        {
+            try
+            {
+                if(!ValidateLogin(username, password))
+                {
+                    return BadRequest(ModelState);
+                }
 
+                var user = await userRepository.AuthenticateUser(username, password);
+                if(user != null)
+                {
+                    string token = await tokenHandler.CreateTokenAsync(user);
+                    return Ok(token);
+                }
+                
+                return BadRequest("Incorrect username or password");
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Server error.");
+            }
+        }
 
 
 
@@ -86,6 +112,25 @@ namespace WebServices.API.Controllers
             }
             return true;
 
+        }
+
+
+        private bool ValidateLogin(string username, string password)
+        {
+            if(username == null)
+            {
+                ModelState.AddModelError(nameof(username), $"{nameof(username)} can not be empty");
+            }
+            if (password == null)
+            {
+                ModelState.AddModelError(nameof(password), $"{nameof(password)} can not be empty");
+            }
+
+            if (ModelState.ErrorCount > 0)
+            {
+                return false;
+            }
+            return true;
         }
     }
 }
