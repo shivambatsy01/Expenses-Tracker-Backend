@@ -11,13 +11,13 @@ using WebServices.API.Repositories.UserRepository;
 namespace WebServices.API.Controllers
 {
     [ApiController]
-    [Route("/auth")]
+    [Route("auth")]
     public class AuthenticationController : Controller
     {
         private readonly IUserRepository userRepository;
         private readonly ITokenHandler tokenHandler;
         private readonly IMapper mapper;
-        public AuthenticationController(IUserRepository userRepository, IMapper mapper)
+        public AuthenticationController(IUserRepository userRepository, IMapper mapper, ITokenHandler tokenHandler)
         {
             this.userRepository = userRepository;
             this.tokenHandler = tokenHandler;
@@ -52,17 +52,17 @@ namespace WebServices.API.Controllers
 
 
         [HttpPost]
-        [Route("{/login}")]
-        public async Task<IActionResult> Login([FromBody]string username, [FromBody]string password)
+        [Route("{login}")]
+        public async Task<IActionResult> Login(LoginRequest request)
         {
             try
             {
-                if(!ValidateLogin(username, password))
+                if(!ValidateLoginRequest(request))
                 {
                     return BadRequest(ModelState);
                 }
 
-                var user = await userRepository.AuthenticateUser(username, password);
+                var user = await userRepository.AuthenticateUser(request.UserName, request.Password);
                 if(user != null)
                 {
                     string token = await tokenHandler.CreateTokenAsync(user);
@@ -115,15 +115,15 @@ namespace WebServices.API.Controllers
         }
 
 
-        private bool ValidateLogin(string username, string password)
+        private bool ValidateLoginRequest(LoginRequest request)
         {
-            if(username == null)
+            if(request.UserName == null)
             {
-                ModelState.AddModelError(nameof(username), $"{nameof(username)} can not be empty");
+                ModelState.AddModelError(nameof(request.UserName), $"{nameof(request.UserName)} can not be empty");
             }
-            if (password == null)
+            if (request.Password == null)
             {
-                ModelState.AddModelError(nameof(password), $"{nameof(password)} can not be empty");
+                ModelState.AddModelError(nameof(request.Password), $"{nameof(request.Password)} can not be empty");
             }
 
             if (ModelState.ErrorCount > 0)
