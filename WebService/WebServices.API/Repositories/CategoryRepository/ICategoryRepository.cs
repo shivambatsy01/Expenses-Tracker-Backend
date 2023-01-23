@@ -4,7 +4,9 @@ namespace WebServices.API.Repositories.CategoryRepository
 {
     public interface ICategoryRepository
     {
-        public Task<IEnumerable<Category>> GetAllCategories();
-        public Task<Category> GetCategoryById(int id);
+        public Task<IEnumerable<Category>> GetAllCategoriesAsync();
+        public Task<Category> GetCategoryByIdAsync(int id);
+        public Task<Category> AddCategoryAsync(Category category);
+        public Task<Category> RemoveCategoryAsync(int id);
     }
 }

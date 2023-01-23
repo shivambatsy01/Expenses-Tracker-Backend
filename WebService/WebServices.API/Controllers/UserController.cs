@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WebServices.API.Repositories.UserRepository;
 
 namespace WebServices.API.Controllers
 {
     [ApiController]
-    [Route("/users")]
+    [Route("users")]
     public class UserController : Controller
     {
         private readonly IUserRepository userRepository;
@@ -15,6 +16,7 @@ namespace WebServices.API.Controllers
 
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAllUsers()
         {
             try
