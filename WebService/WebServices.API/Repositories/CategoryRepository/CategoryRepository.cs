@@ -13,11 +13,11 @@ namespace WebServices.API.Repositories.CategoryRepository
         }
 
 
-
         public async Task<IEnumerable<Category>> GetAllCategoriesAsync()
         {
             return await dbContext.Categories.ToListAsync();
         }
+
 
         public async Task<Category> GetCategoryByIdAsync(int id)
         {
@@ -47,5 +47,6 @@ namespace WebServices.API.Repositories.CategoryRepository
             await dbContext.SaveChangesAsync();
             return category;
         }
+
     }
 }

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using WebServices.API.Database;
 using WebServices.API.Models.Domain;
