@@ -8,7 +8,7 @@ using WebServices.API.Repositories.CategoryRepository;
 namespace WebServices.API.Controllers
 {
     [ApiController]
-    [Route("{categories}")]
+    [Route("categories")]
     public class CategoryController : Controller
     {
         private readonly ICategoryRepository categoryRepository;
