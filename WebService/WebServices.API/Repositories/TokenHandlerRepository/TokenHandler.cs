@@ -22,7 +22,7 @@ namespace WebServices.API.Repositories.TokenHandlerRepository
             {
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.GivenName, user.Name),
-                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("Id", user.Id.ToString())
             };
 
             var token = new JwtSecurityToken(

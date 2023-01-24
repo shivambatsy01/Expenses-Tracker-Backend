@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using WebServices.API.Models.Domain;
 using WebServices.API.Models.RequestDTO;
 using WebServices.API.Models.ResponseDTO;
@@ -23,11 +25,13 @@ namespace WebServices.API.Controllers.Expenses
 
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAllExpenses()
         {
             //or we can use paging here : mention this into jwt string
             try
             {
+                var identity = HttpContext.User.Identity as ClaimsIdentity;
                 var expenses = await expenseRepository.GetAllExpensesAsync();
                 return Ok(expenses);
             }
@@ -64,12 +68,21 @@ namespace WebServices.API.Controllers.Expenses
         //---------------------------------users-expenses-----------------------------
 
         [HttpGet]
-        [Route("{users-expenses}/{userId:Guid}")]
-        public async Task<IActionResult> GetAllUserExpenses(Guid userId)
+        [Authorize]
+        [Route("users-expenses")]
+        public async Task<IActionResult> GetAllUserExpenses()
         {
             //or we can use paging here : mention this into jwt string
             try
             {
+                var identity = HttpContext.User.Identity as ClaimsIdentity;
+                if(identity == null)
+                {
+                    return Unauthorized();
+                }
+                var claims = identity.Claims;
+                var id_Claim = identity.FindFirst("Id").Value;
+                Guid userId = new Guid(id_Claim);
                 var expenses = await expenseRepository.GetUserAllExpensesAsync(userId);
                 return Ok(expenses);
             }
@@ -81,7 +94,7 @@ namespace WebServices.API.Controllers.Expenses
 
 
         [HttpGet]
-        [Route("{users-expenses}/{userId:guid}/{date:DateTime}")]
+        [Route("users-expenses/{userId:guid}/{date:DateTime}")]
         public async Task<IActionResult> GetUserExpenseByDate(Guid userId, DateTime date)
         {
             try
@@ -97,7 +110,7 @@ namespace WebServices.API.Controllers.Expenses
 
 
         [HttpGet]
-        [Route("{users-expenses}/{userId:guid}/{startDate:DateTime}/{endDate:DateTime}")]
+        [Route("users-expenses/{userId:guid}/{startDate:DateTime}/{endDate:DateTime}")]
         public async Task<IActionResult> GetUserExpenseBeetweenDates(Guid userId, DateTime startDate, DateTime endDate)
         {
             try
@@ -115,7 +128,7 @@ namespace WebServices.API.Controllers.Expenses
 
 
         [HttpGet]
-        [Route("{users-expenses}/{userId:guid}/{categoryId:int}")]
+        [Route("users-expenses/{userId:guid}/{categoryId:int}")]
         public async Task<IActionResult> GetUserExpenseByCategory(Guid userId, int categoryId)
         {
             try
@@ -134,7 +147,7 @@ namespace WebServices.API.Controllers.Expenses
         //-------------------------add/update expense---------------------
 
         [HttpPost]
-        [Route("{add-expense}/{userId:Guid}")]
+        [Route("add-expense/{userId:Guid}")]
         public async Task<IActionResult> AddExpense(Guid userId, ExpenseRequest request)
         {
             try
